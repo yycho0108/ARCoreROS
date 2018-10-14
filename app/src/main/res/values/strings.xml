@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name">ARCoreHelloWorld</string>
+    <string name="app_name">ARCoreROS</string>
     <string name="arbutton_label">Enable ARCore</string>
 </resources>

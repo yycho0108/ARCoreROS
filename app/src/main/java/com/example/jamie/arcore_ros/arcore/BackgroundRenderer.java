@@ -13,12 +13,13 @@
  * limitations under the License.
  */
 
-package com.example.jamie.arcorehelloworld;
+package com.example.jamie.arcore_ros.arcore;
 
 import android.content.Context;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
+
 import com.google.ar.core.Frame;
 import com.google.ar.core.Session;
 import java.io.IOException;

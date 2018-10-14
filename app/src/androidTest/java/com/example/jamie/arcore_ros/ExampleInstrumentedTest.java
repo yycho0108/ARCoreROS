@@ -1,4 +1,4 @@
-package com.example.jamie.arcorehelloworld;
+package com.example.jamie.arcore_ros;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.example.jamie.arcorehelloworld", appContext.getPackageName());
+        assertEquals("com.example.jamie.arcore_ros", appContext.getPackageName());
     }
 }

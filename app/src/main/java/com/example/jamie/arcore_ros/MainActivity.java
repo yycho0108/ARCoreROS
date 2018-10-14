@@ -1,12 +1,13 @@
-package com.example.jamie.arcorehelloworld;
+package com.example.jamie.arcore_ros;
 
+/* OpenGL Imports */
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+/* Android Imports */
 import android.os.Handler;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -14,6 +15,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+/* ARCore Imports */
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Frame;
@@ -27,27 +29,54 @@ import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 
-import java.io.IOException;
-import java.util.Locale;
+/* Helper Imports */
+import com.example.jamie.arcore_ros.ros.GPSPermissionHelper;
+import com.example.jamie.arcore_ros.arcore.BackgroundRenderer;
+import com.example.jamie.arcore_ros.arcore.CameraPermissionHelper;
+import com.example.jamie.arcore_ros.arcore.DisplayRotationHelper;
 
-public class MainActivity extends AppCompatActivity implements GLSurfaceView.Renderer {
+/* ROS Imports */
+import org.ros.android.RosActivity;
+import org.ros.node.NodeConfiguration;
+import org.ros.node.NodeMainExecutor;
+import com.example.jamie.arcore_ros.ros.SensorPublisher;
+
+import java.io.IOException;
+
+public class MainActivity extends RosActivity implements GLSurfaceView.Renderer {
 
     private final BackgroundRenderer backgroundRenderer = new BackgroundRenderer();
     private DisplayRotationHelper displayRotationHelper;
 
     private boolean mUserRequestedInstall = true;
     private Session mSession = null;
+    SensorPublisher mPublisher = null;
 
+    /* UI Elements */
     private GLSurfaceView surfaceView = null;
     Button mArButton = null;
     TextView mPoseView = null;
-    float[] txn={0,0,0};
+
+    Pose deviceToPhysical = null;
+
+    public MainActivity() {
+        super("Odomobile", "Odomobile");
+    }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+    public void init(NodeMainExecutor n){
+        NodeConfiguration nodeConfiguration = NodeConfiguration.newPublic(getRosHostname());
+        nodeConfiguration.setMasterUri(getMasterUri());
 
+        mPublisher = new SensorPublisher(this, n);
+
+        //register listeners - camera and other sensors
+        mPublisher.registerListeners(this);
+
+        n.execute(mPublisher, nodeConfiguration);
+    }
+
+    void initARCore(){
         surfaceView = findViewById(R.id.surfaceView);
         displayRotationHelper = new DisplayRotationHelper(/*context=*/ this);
 
@@ -63,26 +92,13 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         surfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
 
         maybeEnableArButton();
+    }
 
-        final Handler handler = new Handler();
-        final int delay = 100; //milliseconds
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                handler.postDelayed(new Runnable(){
-                    public void run(){
-                        String txt = String.format(Locale.ENGLISH, "(%f,%f,%f)", txn[0], txn[1], txn[2]);
-                        //Log.i("pose", txt);
-                        mPoseView.setText(txt);
-                        handler.postDelayed(this, delay);
-
-                    }
-                }, delay);
-            }
-        }).start();
-
-
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        initARCore();
     }
 
     @Override
@@ -127,8 +143,42 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
             Camera camera = frame.getCamera();
 
             // get tracking pose + show
-            Pose pose = camera.getPose();
-            this.txn = pose.getTranslation();
+            if(camera.getTrackingState() == TrackingState.TRACKING){
+                Pose pose = camera.getPose();
+                Log.i("pose", pose.toString());
+
+                if(deviceToPhysical == null) {
+                    // Can be done once after camera permission is granted.
+//                    CameraManager cm = getSystemService(CameraManager.class);
+//                    int sensorOrientation = Arrays.stream(cm.getCameraIdList()).map((id) -> {
+//                        try {
+//                            if (cm.getCameraCharacteristics(id).get(CameraCharacteristics.LENS_FACING) ==
+//                                    CameraMetadata.LENS_FACING_BACK) {
+//                                return cm.getCameraCharacteristics(id).get(CameraCharacteristics.SENSOR_ORIENTATION);
+//                            }
+//                        } catch (CameraAccessException e) {
+//                            throw new RuntimeException(e);
+//                        }
+//                        return -1;
+//                    }).filter((orientation) -> orientation != -1).findFirst().orElse(0);
+//                    deviceToPhysical = Pose.makeInterpolated(
+//                            Pose.IDENTITY,
+//                            Pose.makeRotation(0, 0, -(float) Math.sqrt(0.5), (float) Math.sqrt(0.5)),
+//                            sensorOrientation / 90);
+                    deviceToPhysical = pose.inverse();
+                }
+
+                if(deviceToPhysical != null){
+                    //Pose cameraPose = camera.getPose().compose(deviceToPhysical);
+                    Pose cameraPose = deviceToPhysical.compose(pose);
+                    // Per frame.
+                    this.mPublisher.onOdomChanged(
+                            cameraPose.getTranslation(),
+                            cameraPose.getRotationQuaternion()
+                    );
+                }
+
+            }
 
             // Draw background.
             backgroundRenderer.draw(frame);
@@ -161,6 +211,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     @Override
     protected void onPause(){
         super.onPause();
+
+        // stop ARCore?
         if(mSession != null) {
             displayRotationHelper.onPause();
             surfaceView.onPause();
@@ -177,6 +229,13 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
             CameraPermissionHelper.requestCameraPermission(this);
             return;
         }
+
+        // GPS Permission is technically not required?
+        if (!GPSPermissionHelper.hasPermissions(this)) {
+            GPSPermissionHelper.requestPermissions(this);
+            return;
+        }
+
         // Make sure ARCore is installed and up to date.
         try {
             if (mSession == null) {
@@ -192,27 +251,17 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
                         return;
                 }
             }
-        } catch (UnavailableUserDeclinedInstallationException e) {
+        }catch (
+                UnavailableUserDeclinedInstallationException |
+                UnavailableSdkTooOldException |
+                UnavailableArcoreNotInstalledException |
+                UnavailableApkTooOldException |
+                UnavailableDeviceNotCompatibleException e) {
+            // Current catch statements.
             // Display an appropriate message to the user and return gracefully.
             Toast.makeText(this, "TODO: handle exception " + e, Toast.LENGTH_LONG)
                     .show();
-            return;
-        } catch (UnavailableSdkTooOldException e) {  // Current catch statements.
-            Toast.makeText(this, "TODO: handle exception " + e, Toast.LENGTH_LONG)
-                    .show();
             return;  // mSession is still null.
-        } catch(UnavailableArcoreNotInstalledException e){
-            Toast.makeText(this, "TODO: handle exception " + e, Toast.LENGTH_LONG)
-                    .show();
-            return;
-        } catch(UnavailableApkTooOldException e){
-            Toast.makeText(this, "TODO: handle exception " + e, Toast.LENGTH_LONG)
-                    .show();
-            return;
-        } catch(UnavailableDeviceNotCompatibleException e){
-            Toast.makeText(this, "TODO: handle exception " + e, Toast.LENGTH_LONG)
-                    .show();
-            return;
         }
 
         if(mSession != null){
@@ -220,7 +269,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
                 if(CameraPermissionHelper.hasCameraPermission(this)) {
                     mSession.setCameraTextureName(backgroundRenderer.getTextureId());
                     mSession.resume();
-                    // TODO : reviv onResume
+
                     if(surfaceView != null) {
                         surfaceView.onResume();
                     }
@@ -232,10 +281,12 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
                 return;
             }
         }
+
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
+
         if (!CameraPermissionHelper.hasCameraPermission(this)) {
             Toast.makeText(this, "Camera permission is needed to run this application", Toast.LENGTH_LONG)
                     .show();
@@ -245,6 +296,16 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
             }
             finish();
         }
+
+        if (!GPSPermissionHelper.hasPermissions(this)){
+            Toast.makeText(this, "GPS has been disabled!", Toast.LENGTH_LONG)
+                    .show();
+            if (!GPSPermissionHelper.shouldShowRequestPermissionRationale(this)) {
+                // Permission denied with checking "Do not ask again".
+                GPSPermissionHelper.launchPermissionSettings(this);
+            }
+        }
+
     }
 
     void maybeEnableArButton() {
@@ -267,4 +328,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
             mArButton.setEnabled(false);
         }
     }
+
+
 }

@@ -1,4 +1,4 @@
-package com.example.jamie.arcorehelloworld;
+package com.example.jamie.arcore_ros;
 
 import org.junit.Test;
 
