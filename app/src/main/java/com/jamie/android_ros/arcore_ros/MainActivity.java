@@ -1,4 +1,4 @@
-package com.example.jamie.arcore_ros;
+package com.jamie.android_ros.arcore_ros;
 
 /* OpenGL Imports */
 import android.opengl.GLES20;
@@ -30,16 +30,16 @@ import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 
 /* Helper Imports */
-import com.example.jamie.arcore_ros.ros.GPSPermissionHelper;
-import com.example.jamie.arcore_ros.arcore.BackgroundRenderer;
-import com.example.jamie.arcore_ros.arcore.CameraPermissionHelper;
-import com.example.jamie.arcore_ros.arcore.DisplayRotationHelper;
+import com.jamie.android_ros.arcore_ros.ros.GPSPermissionHelper;
+import com.jamie.android_ros.arcore_ros.arcore.BackgroundRenderer;
+import com.jamie.android_ros.arcore_ros.arcore.CameraPermissionHelper;
+import com.jamie.android_ros.arcore_ros.arcore.DisplayRotationHelper;
 
 /* ROS Imports */
 import org.ros.android.RosActivity;
 import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
-import com.example.jamie.arcore_ros.ros.SensorPublisher;
+import com.jamie.android_ros.arcore_ros.ros.SensorPublisher;
 
 import java.io.IOException;
 
@@ -144,8 +144,9 @@ public class MainActivity extends RosActivity implements GLSurfaceView.Renderer 
 
             // get tracking pose + show
             if(camera.getTrackingState() == TrackingState.TRACKING){
+
                 Pose pose = camera.getPose();
-                Log.i("pose", pose.toString());
+                //Log.i("pose", pose.toString());
 
                 if(deviceToPhysical == null) {
                     // Can be done once after camera permission is granted.

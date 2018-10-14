@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.example.jamie.arcore_ros.arcore;
+package com.jamie.android_ros.arcore_ros.arcore;
 
 import android.content.Context;
 import android.opengl.GLES11Ext;

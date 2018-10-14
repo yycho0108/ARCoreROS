@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.jamie.arcore_ros">
+    package="com.jamie.android_ros.arcore_ros">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
@@ -41,7 +41,7 @@
             android:name="com.google.ar.core"
             android:value="required" />
 
-        <activity android:name="com.example.jamie.arcore_ros.MainActivity">
+        <activity android:name="com.jamie.android_ros.arcore_ros.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

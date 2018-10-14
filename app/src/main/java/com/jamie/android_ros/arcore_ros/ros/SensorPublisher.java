@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.example.jamie.arcore_ros.ros;
+package com.jamie.android_ros.arcore_ros.ros;
 
 import android.app.Activity;
 import android.content.Context;

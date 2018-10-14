@@ -1,4 +1,4 @@
-package com.example.jamie.arcore_ros.ros;
+package com.jamie.android_ros.arcore_ros.ros;
 
 /**
  * Created by jamiecho on 2/5/17.

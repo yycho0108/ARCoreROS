@@ -1,4 +1,4 @@
-package com.example.jamie.arcore_ros;
+package com.jamie.android_ros.arcore_ros;
 
 import org.junit.Test;
 

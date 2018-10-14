@@ -1,4 +1,4 @@
-package com.example.jamie.arcore_ros.ros;
+package com.jamie.android_ros.arcore_ros.ros;
 import org.ros.node.ConnectedNode;
 import org.ros.node.topic.Publisher;
 

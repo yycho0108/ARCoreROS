@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 //package com.google.ar.core.examples.java.common.helpers;
-package com.example.jamie.arcore_ros.arcore;
+package com.jamie.android_ros.arcore_ros.arcore;
 
 import android.Manifest;
 import android.app.Activity;
