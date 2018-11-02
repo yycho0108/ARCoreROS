@@ -2,8 +2,14 @@
 
 Get Camera Pose!
 
-## Demo Video
-![Demo](figs/demo.gif)
+## Demo
 
-## Demo Picture
-![Demo](figs/demo.png)
+Test configuration:
+
+![cfg](figs/config.png)
+
+Running:
+
+![demo-video](figs/demo.gif)
+
+![demo-image](figs/demo.png)
