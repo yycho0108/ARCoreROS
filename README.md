@@ -1,6 +1,6 @@
-# ARCore Hello World
+# ARCore ROS
 
-Get Camera Pose!
+Very unofficial ROS binding for Google ARCore -  currently only supported on devices where [ARCore is supported](https://developers.google.com/ar/discover/supported-devices).
 
 ## Demo
 
